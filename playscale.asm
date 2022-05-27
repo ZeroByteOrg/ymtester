@@ -1,12 +1,14 @@
 .include "x16.inc"
 .include "via.inc"
 
+; NOTE - gonna delete this later and do this in C instead.
+
+.importzp datapointer
+
 .import ymwrite
 
 .export play_scale
 
-.zeropage
-data: .res 2
 
 .bss
 delay:      .res 1
@@ -15,38 +17,52 @@ lastjiffy:  .res 1
 .code
 done:
   rts
-play_scale:
-  stz delay
-  lda #<scale
-  sta data
-  lda #>scale
-  sta data+1
-  bra tick
-wait_frame:
-  lda delay
-  beq next_note
-  cmp #$ff
+
+.proc play_scale: near
+  lda #<SCALE
+  sta datapointer
+  lda #>SCALE
+  sta datapointer+1
+get_delay:
+  lda (datapointer)
+  tax
+  cpx #0
+  beq play_note
+  cpx #$ff
   beq done
-  dec
-  sta delay
+tick:
   jsr RDTIM
   sta lastjiffy
 keep_waiting:
   jsr RDTIM
   cmp lastjiffy
   beq keep_waiting
-tick:
-  lda delay
-  beq next_note
-  cmp #$ff
-  beq done
-  dec
-  sta delay
+  dex
+  bne tick
+
+play_note:
+  ldy #1
+  lda (datapointer),y ; get reg
+  tax
+  iny
+  lda (datapointer),y ; get val
+  tay
+  ; advance data pointer to next 3-byte tuple
+  lda #3
+  clc
+  adc datapointer
+  sta datapointer
+  lda datapointer+1
+  adc #0
+  sta datapointer+1
+  jsr ymwrite
+  bcs
+
 
 
 .rodata
 ; YM data tables - format = delay, reg, val, ...  delay FF = done
-:scale
+SCALE:
   .byte 00,$08,$00,  00,$28+0,$2e,  00,$08,$78+0
   .byte 30,$08,$01,  00,$28+1,$31,  00,$08,$78+1
   .byte 30,$08,$02,  00,$28+2,$34,  00,$08,$78+2

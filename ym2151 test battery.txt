@@ -1,0 +1,29 @@
+Read tests:
+
+1: is read always zero
+2: set status flag with timers, and steady read that
+3: check busy
+  - timeout: busy never seen
+  - timeout: busy never clears
+  - success: busy appears then clears
+4: check IRQ
+
+
+write methods:
+  mega-nop
+  ym-read-status
+  via-timer
+  
+Write tests:
+
+harness test:
+  CT pins to VIA pins PA0 PA1
+
+5:write CT pins, then read VIA
+  - timeout value no update
+  - err - wrong value
+  - success - value matches
+
+6: audible output:
+  - play an arpegio successfully
+

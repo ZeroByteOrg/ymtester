@@ -13,7 +13,7 @@ write methods:
   mega-nop
   ym-read-status
   via-timer
-  
+
 Write tests:
 
 harness test:
@@ -26,4 +26,3 @@ harness test:
 
 6: audible output:
   - play an arpegio successfully
-

@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-extern uint8_t playscale();
+extern uint16_t playscale(int8_t);
 
 #endif

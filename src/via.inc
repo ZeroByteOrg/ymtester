@@ -1,5 +1,5 @@
-.ifndef VIA_INC
-VIA_INC  = 1
+.ifndef _VIA_INC_
+_VIA_INC_  = 1
 
 VIA1_t1cl	=	$9F04
 VIA1_t1ch	=	$9F05

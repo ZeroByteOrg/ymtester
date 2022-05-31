@@ -1,6 +1,7 @@
 
-#include "vsync.h" // cc65's waitvsync() in cbm.h is broken
+//#include "vsync.h" // cc65's waitvsync() in cbm.h is broken
 #include "ymwrite.h"
+#include "unit_test.h"
 #include <stdint.h>
 
 static const unsigned char tone[] = {
@@ -10,7 +11,6 @@ static const unsigned char tone[] = {
 
 // song format: delay , reg , val , ...
 // delay 0xff = end
-// delay 0xfe = init
 static const unsigned char CMAJOR_SCALE[] = {
   00,0x08,0x00,  00,0x28+0,0x2e,  00,0x08,0x78+0,  07,0x08,0x00,
   00,0x08,0x01,  00,0x28+1,0x31,  00,0x08,0x78+1,  07,0x08,0x01,
@@ -29,21 +29,21 @@ static const unsigned char CMAJOR_SCALE[] = {
 };
 
 uint16_t yminit();
-uint16_t ympatch(unsigned char, unsigned char*);
-uint16_t playscale();
+uint16_t ympatch(unsigned char, const unsigned char*);
+//uint16_t playscale();
 
 uint16_t yminit() {
-  unsigned char i, r;
+  unsigned char voice, reg;
   uint16_t errors = 0;
-  for (i=0;i<8;i++) {
-    r=0xe0+i;
+  for (voice=0;voice<8;voice++) {
+    reg=0xe0+voice;
     // set RR=max and then release the voice
-    errors += ymwrite(r+0x00,0x0f);
-    errors += ymwrite(r+0x08,0x0f);
-    errors += ymwrite(r+0x10,0x0f);
-    errors += ymwrite(r+0x18,0x0f);
-    errors += ymwrite(0x08,i);
-    errors += ympatch(i,&tone);
+    errors += ymwrite(reg+0x00,0x0f);
+    errors += ymwrite(reg+0x08,0x0f);
+    errors += ymwrite(reg+0x10,0x0f);
+    errors += ymwrite(reg+0x18,0x0f);
+    errors += ymwrite(0x08,voice);
+    errors += ympatch(voice,tone);
   }
   errors += ymwrite(0x0f,0); //Noise register
   errors += ymwrite(0x14,0); //CTRL register
@@ -54,7 +54,7 @@ uint16_t yminit() {
   return errors;
 }
 
-uint16_t ympatch(unsigned char v, unsigned char* patch) {
+uint16_t ympatch(unsigned char v, const unsigned char* patch) {
   uint8_t i;
   uint16_t errors = 0;
   errors += ymwrite(0x20+v,*patch);
@@ -68,18 +68,18 @@ uint16_t ympatch(unsigned char v, unsigned char* patch) {
   return errors;
 }
 
-uint16_t playscale(int8_t command) {
+uint16_t playscale(test_cmd_e command) {
   static unsigned char delay = 0;
-  static unsigned char* data = &CMAJOR_SCALE;
+  static const unsigned char* data = CMAJOR_SCALE;
   uint16_t errors = 0;
 
-  if (command < 0) { // stop
+  if (command == CMD_STOP) { // stop
     delay = 0;
     return yminit();
   }
-  if (command > 0) { // start
+  if (command == CMD_START) { // start
     delay = 1;
-    data = &CMAJOR_SCALE;
+    data = CMAJOR_SCALE;
     errors = yminit();
   }
   // continue
@@ -87,15 +87,11 @@ uint16_t playscale(int8_t command) {
   if (--delay > 0) return 0;
   while (delay == 0) {
     errors += ymwrite(data[1], data[2]);
-    // data = &data[3];
-    ++data;
-    ++data;
-    ++data;
+    data = data+3;
     delay = data[0];
     if (delay==0xff) {
-      delay = 0;
-      errors += yminit();
-      return errors;
+      data = CMAJOR_SCALE;
+      delay = 60 + data[0];
     }
   }
   return errors;

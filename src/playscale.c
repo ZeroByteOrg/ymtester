@@ -1,5 +1,4 @@
 
-//#include "vsync.h" // cc65's waitvsync() in cbm.h is broken
 #include "ymwrite.h"
 #include "unit_test.h"
 #include <stdint.h>
@@ -37,12 +36,13 @@ uint16_t yminit() {
   uint16_t errors = 0;
   for (voice=0;voice<8;voice++) {
     reg=0xe0+voice;
-    // set RR=max and then release the voice
+    // set RR=max on all 4 OPs and then release the voice
     errors += ymwrite(reg+0x00,0x0f);
     errors += ymwrite(reg+0x08,0x0f);
     errors += ymwrite(reg+0x10,0x0f);
     errors += ymwrite(reg+0x18,0x0f);
     errors += ymwrite(0x08,voice);
+    // load "tone" patch into voice
     errors += ympatch(voice,tone);
   }
   errors += ymwrite(0x0f,0); //Noise register

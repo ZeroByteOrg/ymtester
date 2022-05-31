@@ -9,11 +9,11 @@ typedef enum YM_METHOD {
   YM_WRITE_BUSYFLAG
 } YM_METHOD;
 
-#ifdef _main_c_
-uint16_t ym_timeouts, ym_nobusy, ym_badstatus;
-#else
-extern uint16_t ym_timeouts, ym_nobusy, ym_badstatus;
-#endif
+extern uint16_t
+  ym_timeouts,  // number of times YM was busy and never cleared
+  ym_nobusy,    // number of times YM was immediately "available" when writing
+  ym_yesbusy,   // number of times YM was initially "busy" when writing
+  ym_badstatus; // number of times YM_STATUS byte contained 1 in any bit 0-6
 
 extern unsigned char __fastcall__ ymwrite (unsigned char reg, unsigned char val);
 extern unsigned char __fastcall__ ymwrite_setmethod (YM_METHOD);

@@ -15,9 +15,10 @@
 ;
 
 
-  .import _ym_timeouts  ; uint16_t
-  .import _ym_nobusy    ; uint16_t
-  .import _ym_badstatus ; uint16_t
+  .export _ym_timeouts  ; uint16_t
+  .export _ym_nobusy    ; uint16_t
+  .export _ym_yesbusy   ; uint16_t
+  .export _ym_badstatus ; uint16_t
 
   .import popa
   .export _ymwrite
@@ -28,6 +29,15 @@
 .bss
 nobusy:         .res 1
 busy_timeout:   .res 1
+
+.data
+_ym_timeouts:  .word 0 ; number of times BUSY flag never cleared
+_ym_nobusy:    .word 0 ; number of times BUSY flag was initially clear
+_ym_yesbusy:   .word 0 ; number of times BUSY flag was initially set
+_ym_badstatus: .word 0 ; number of times STATUS byte had 1 in any bits 0-6.
+
+; Note that BUSY means bit7 of YM status byte, or the timeer status bit in
+; VIA if using the VIA as a stand-in busy timer for the YM. (not yet implemented)
 
 ;--------------------------------------------------------------------
 
@@ -81,21 +91,24 @@ ymwrite:
 
 .proc ymwrite_nops: near
   lda #64
+do_nop:
   nop
   dec
-  bne ymwrite_nops
+  bne do_nop
   stx YM_reg
   nop
   nop
   nop
   sty YM_data
   lda #0 ; return success
+  ldx #0 ; high-byte of 16bit returns (expected to be zero by C)
   rts
 .endproc
 
 ;--------------------------------------------------------------------
 
 .proc ymwrite_viat1: near
+  ; TODO: implement "nobusy" check/count for this write method
   lda #0
 checkvia:
   bit VIA2_ifr
@@ -121,6 +134,7 @@ timeout:
   bne :+
   inc _ym_timeouts+1
 : lda #1 ; return failure
+  ldx #0 ; high-byte of return value for C
   rts
 
 ;--------------------------------------------------------------------
@@ -151,13 +165,19 @@ go:
   sty YM_data
   lda nobusy ; 1 = no busy flag observed, 0 = busy flag observed
   ; add nobusy to the _ym_nobusy counter
-  clc
-  adc _ym_nobusy
-  sta _ym_nobusy
-  lda #0
-  adc _ym_nobusy+1
-  sta _ym_nobusy+1
+  bne inc_nobusy
+inc_yesbusy:
+  inc _ym_yesbusy
+  bne exit
+  inc _ym_yesbusy+1
+  bra exit
+inc_nobusy:
+  inc _ym_nobusy
+  bne exit
+  inc _ym_nobusy+1
+exit:
   lda #0 ; return success
+  ldx #0 ; high-byte of return value for C
   rts
 .endproc
 
@@ -166,4 +186,5 @@ bad_ym_status:
   bne :+
   inc _ym_badstatus+1
 : lda #1  ; return failure
+  ldx #0  ; high-byte of return value for C
   rts

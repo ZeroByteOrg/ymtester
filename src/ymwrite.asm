@@ -26,6 +26,10 @@
   .export ymwrite
   .export ymwrite_setmethod
 
+  ; allow other assembly routines to use these tmp locations
+  .export nobusy
+  .export busy_timeout
+
 .bss
 nobusy:         .res 1
 busy_timeout:   .res 1

@@ -6,7 +6,7 @@
 typedef enum test_unit_e {
   TEST_NULL,
   TEST_AUDIBLE,
-  TEST_READ_ZERO,
+  TEST_BUSY_FLAG,
   TEST_READ_STATUS,
   TEST_IRQ,
   TEST_WRITE_HARNESS,
@@ -26,7 +26,8 @@ typedef enum test_cmd_e {
 
 typedef uint16_t(*test_unit)(test_cmd_e);
 
-extern uint16_t test_errors;
+extern uint16_t test_errors, test_count;
+extern uint8_t test_state;
 
 extern void test_select(test_unit_e);
 extern void test_start();

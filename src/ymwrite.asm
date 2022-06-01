@@ -15,10 +15,10 @@
 ;
 
 
-  .export _ym_timeouts  ; uint16_t
-  .export _ym_nobusy    ; uint16_t
-  .export _ym_yesbusy   ; uint16_t
-  .export _ym_badstatus ; uint16_t
+  .export _count_fail_busy  ; uint16_t
+  .export _count_fail_nobusy    ; uint16_t
+  .export _count_fail_badread ; uint16_t
+  .export _count_ok_busy   ; uint16_t
 
   .import popa
   .export _ymwrite
@@ -26,19 +26,24 @@
   .export ymwrite
   .export ymwrite_setmethod
 
-  ; allow other assembly routines to use these tmp locations
+  ; allow other assembly routines to use these tmp locations and routines
   .export nobusy
-  .export busy_timeout
+  .export wait_timer
+  .export success_busy
+  .export fail_busy
+  .export fail_nobusy
+  .export fail_dirty
+  .export return_success
 
 .bss
 nobusy:         .res 1
-busy_timeout:   .res 1
+wait_timer:   .res 1
 
 .data
-_ym_timeouts:  .word 0 ; number of times BUSY flag never cleared
-_ym_nobusy:    .word 0 ; number of times BUSY flag was initially clear
-_ym_yesbusy:   .word 0 ; number of times BUSY flag was initially set
-_ym_badstatus: .word 0 ; number of times STATUS byte had 1 in any bits 0-6.
+_count_fail_busy:     .word 0 ; failures: BUSY flag never cleared
+_count_fail_nobusy:   .word 0 ; failures: BUSY flag was never asserted
+_count_fail_badread:  .word 0 ; failures: STATUS byte had 1 in any bits 0-6.
+_count_ok_busy:       .word 0 ; Success count whe BUSY flag was initially set
 
 ; Note that BUSY means bit7 of YM status byte, or the timeer status bit in
 ; VIA if using the VIA as a stand-in busy timer for the YM. (not yet implemented)
@@ -55,6 +60,7 @@ NUM_METHODS = 3
 
 ;--------------------------------------------------------------------
 
+.code
 _ymwrite_setmethod:
 .proc ymwrite_setmethod: near
   ; .A = chosen method #
@@ -84,15 +90,13 @@ _ymwrite:
   tay
   jsr popa
   tax
+ymwrite: ; expects .X = reg and .Y = val as the three asm routines use.
   jmp ymwrite_nops
   ymwrite_vector := (*-2)
 
-  ; expects .X = reg and .Y = val as the three asm routines use.
-ymwrite:
-  jmp (ymwrite_vector)
-
 ;--------------------------------------------------------------------
 
+.code
 .proc ymwrite_nops: near
   lda #64
 do_nop:
@@ -104,13 +108,12 @@ do_nop:
   nop
   nop
   sty YM_data
-  lda #0 ; return success
-  ldx #0 ; high-byte of 16bit returns (expected to be zero by C)
-  rts
+  jmp return_success
 .endproc
 
 ;--------------------------------------------------------------------
 
+.code
 .proc ymwrite_viat1: near
   ; TODO: implement "nobusy" check/count for this write method
   lda #0
@@ -119,7 +122,7 @@ checkvia:
 	bvs	go
   dec
   bne checkvia
-  bra timeout
+  jmp fail_busy
 
 go:
   stx	YM_reg
@@ -128,38 +131,29 @@ go:
 	nop
 	sty	YM_data
 	stz VIA2_t1ch
-  lda #0
-	rts
+  jmp return_success
 .endproc
-
-timeout:
-  ; increment the timeouts counter
-  inc _ym_timeouts
-  bne :+
-  inc _ym_timeouts+1
-: lda #1 ; return failure
-  ldx #0 ; high-byte of return value for C
-  rts
 
 ;--------------------------------------------------------------------
 
+.code
 .proc ymwrite_busyflag: near
   lda #1
   sta nobusy
   lda #64 ; overly-generous timeout for YM2151 busy flag to become clear.
-  sta busy_timeout
+  sta wait_timer
 
-; this "bad read" check assumes that the timers are not running and that
-; the overflow flags are clear.
+  ; this "bad read" check assumes that the timers are not running and that
+  ; the overflow flags are clear.
   lda #$7f  ; mask to check that the lower bits are all zero
 checkbusy:
   bit YM_data
-  bne bad_ym_status ; bits other than the busy flag are set. (bad read)
+  bne fail_dirty ; bits other than the busy flag are set. (bad read)
   bpl go
   stz nobusy
-  dec busy_timeout
+  dec wait_timer
   bne checkbusy
-  bra timeout
+  jmp fail_busy
 
 go:
   stx YM_reg
@@ -168,27 +162,41 @@ go:
   nop
   sty YM_data
   lda nobusy ; 1 = no busy flag observed, 0 = busy flag observed
-  ; add nobusy to the _ym_nobusy counter
-  bne inc_nobusy
-inc_yesbusy:
-  inc _ym_yesbusy
-  bne exit
-  inc _ym_yesbusy+1
-  bra exit
-inc_nobusy:
-  inc _ym_nobusy
-  bne exit
-  inc _ym_nobusy+1
-exit:
-  lda #0 ; return success
-  ldx #0 ; high-byte of return value for C
-  rts
+  bne success_busy ; we want to count times no busy was observed
+  bra return_success ; inc the ok_busy counter if busy was encountered
 .endproc
 
-bad_ym_status:
-  inc _ym_badstatus
-  bne :+
-  inc _ym_badstatus+1
-: lda #1  ; return failure
-  ldx #0  ; high-byte of return value for C
+;--------------------------------------------------------------------
+
+.code
+success_busy:
+  inc _count_ok_busy
+  bne return_success
+  inc _count_ok_busy+1
+  bra return_success
+
+fail_dirty:
+  inc _count_fail_badread
+  bne return_fail
+  inc _count_fail_badread+1
+  bra return_fail
+
+fail_busy:
+  inc _count_fail_busy
+  bne return_fail
+  inc _count_fail_busy+1
+  bra return_fail
+
+fail_nobusy:
+  inc _count_fail_nobusy
+  bne return_fail
+  inc _count_fail_nobusy+1
+  bra return_fail
+
+return_fail:
+  lda #1
+  bra :+
+return_success:
+  lda #0
+: ldx #0
   rts

@@ -1,9 +1,13 @@
+#include "ymwrite.h"
 #include "unit_test.h"
 
-extern unsigned char __fastcall__ ym_testbusy();
-
 uint16_t busyflag(test_cmd_e command) {
-
-  if (command == CMD_STOP) return 0;
-  return ym_testbusy();
+  static YM_METHOD lastmethod ;
+  if (command == CMD_START) {
+    lastmethod = ym_current_method;
+    return ymwrite_setmethod(YM_WRITE_FORCEBUSY);
+  }
+  if (command == CMD_STOP) return ymwrite_setmethod(lastmethod);
+  return 0;
+  return ymwrite(0,0);
 }

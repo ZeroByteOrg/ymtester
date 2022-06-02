@@ -14,9 +14,9 @@ test_unit modules[TEST_count] = {
 
 test_unit test_module=&nulltest;
 
-uint8_t test_state = STATE_IDLE;
+uint8_t  test_state  = STATE_IDLE;
 uint16_t test_errors = 0;
-uint16_t test_count = 0;
+uint16_t test_count  = 0;
 
 void test_select(test_unit_e t) {
   if (test_state == STATE_RUNNING)

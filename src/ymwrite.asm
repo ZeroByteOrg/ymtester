@@ -23,6 +23,7 @@
   .import popa
   .export _ymwrite
   .export _ymwrite_setmethod
+  .export _ym_current_method
   .export ymwrite
   .export ymwrite_setmethod
 
@@ -36,14 +37,15 @@
   .export return_success
 
 .bss
-nobusy:         .res 1
-wait_timer:   .res 1
+nobusy:     .res 1
+wait_timer: .res 1
 
 .data
 _count_fail_busy:     .word 0 ; failures: BUSY flag never cleared
 _count_fail_nobusy:   .word 0 ; failures: BUSY flag was never asserted
 _count_fail_badread:  .word 0 ; failures: STATUS byte had 1 in any bits 0-6.
 _count_ok_busy:       .word 0 ; Success count whe BUSY flag was initially set
+_ym_current_method:   .byte 0 ; index of currently-selected write method
 
 ; Note that BUSY means bit7 of YM status byte, or the timeer status bit in
 ; VIA if using the VIA as a stand-in busy timer for the YM. (not yet implemented)
@@ -52,11 +54,11 @@ _count_ok_busy:       .word 0 ; Success count whe BUSY flag was initially set
 
 .rodata
 WR_METHOD_LO:
-  .byte <ymwrite_nops, <ymwrite_viat1, <ymwrite_busyflag
+  .byte <ymwrite_nops, <ymwrite_viat1, <ymwrite_busyflag, <ymwrite_forcebusy
 WR_METHOD_HI:
-  .byte >ymwrite_nops, >ymwrite_viat1, >ymwrite_busyflag
+  .byte >ymwrite_nops, >ymwrite_viat1, >ymwrite_busyflag, >ymwrite_forcebusy
 
-NUM_METHODS = 3
+NUM_METHODS = (WR_METHOD_HI - WR_METHOD_LO)
 
 ;--------------------------------------------------------------------
 
@@ -67,6 +69,7 @@ _ymwrite_setmethod:
   ; returns A=1 if error, A=0 if successful
   cmp #NUM_METHODS
   bcs exit ; with 1 in the carry flag
+  sta _ym_current_method
   tax
   sei
   lda WR_METHOD_LO,x
@@ -77,6 +80,7 @@ _ymwrite_setmethod:
 exit:
   lda #0
   rol ; .A = carry flag for return value to C program
+  ldx #0
   rts
 .endproc
 
@@ -200,3 +204,77 @@ return_success:
   lda #0
 : ldx #0
   rts
+
+; export this routine to the rest of the project:
+; args = none
+; return = .AX  (0 = success, 1 = failure)
+
+.code
+.proc ymwrite_forcebusy: near
+  ;save the write arguments for later
+  phx
+  phy
+  lda #1
+  sta nobusy
+  lda #$7F ; bad YM_STATUS mask - all of these bits should be clear
+  ldx #0
+  ldy #128 ; busy timeout
+
+; do an initial safe wait of 256 busy loops in order to ensure YM is not busy
+safe_delay:
+  dex
+  bne safe_delay
+
+  ; cause YM to become busy with a write to reg 0 = 0.
+  stz YM_reg
+  nop
+  nop
+  nop
+  stz YM_data
+
+require_busy:
+  bit YM_data
+  bne dirty
+  bmi busy_detected
+  stz nobusy
+  dey
+  bne require_busy
+  pla
+  pla
+  jmp fail_nobusy
+
+busy_detected:
+  ldy #128 ; busy timeout
+still_busy:
+  bit YM_data
+  bne dirty
+  bpl success
+  dey
+  bne still_busy
+  pla
+  pla
+  bra fail_busy
+
+success:
+  ldx nobusy
+  bne done
+  inc _count_ok_busy
+  bne done
+  inc _count_ok_busy+1
+done:
+  ply
+  plx
+  stx YM_reg
+  nop
+  nop
+  nop
+  sty YM_data
+  jmp return_success
+
+
+dirty:
+  pla
+  pla
+  jmp fail_dirty
+
+.endproc

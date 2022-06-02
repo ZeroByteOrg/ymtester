@@ -19,6 +19,8 @@ extern uint16_t
 extern YM_METHOD ym_current_method;
 
 extern unsigned char __fastcall__ ymwrite (unsigned char reg, unsigned char val);
-extern unsigned char __fastcall__ ymwrite_setmethod (YM_METHOD);
+extern void ymwrite_lock();
+extern void ymwrite_unlock();
+extern char ymwrite_set(YM_METHOD);
 
 #endif

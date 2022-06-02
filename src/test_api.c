@@ -1,6 +1,7 @@
 #include "test_api.h"
 #include "testmodules.h"
 
+char test_number;
 
 test_unit modules[TEST_count] = {
   &nulltest,
@@ -13,7 +14,9 @@ test_unit modules[TEST_count] = {
 
 test_unit test_module=&nulltest;
 
-uint8_t  test_state  = STATE_IDLE;
+test_state_e test_state  = STATE_IDLE;
+test_unit_e current_test = TEST_NULL;
+
 uint16_t test_errors = 0;
 uint16_t test_count  = 0;
 
@@ -27,6 +30,7 @@ void test_select(test_unit_e t) {
     test_errors += test_module(CMD_START);
     test_count = 1;
   }
+  current_test = t;
 }
 
 void test_start() {

@@ -48,7 +48,7 @@ src/%.o: src/%.c
 
 .PHONY: clean
 clean:
-	$(RM) $(EXEC) $(OBJS) $(DEPS)
+	$(RM) $(EXEC) $(OBJS) $(DEPS) $(addsuffix .sym,$(basename $(EXEC)))
 
 .PHONY: objclean
 objclean:

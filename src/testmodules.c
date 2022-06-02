@@ -11,9 +11,18 @@ uint16_t busyflag(test_cmd_e command) {
   static YM_METHOD lastmethod ;
   if (command == CMD_START) {
     lastmethod = ym_current_method;
-    return ymwrite_setmethod(YM_WRITE_FORCEBUSY);
+    if (ymwrite_set(YM_WRITE_FORCEBUSY) == 0) {
+      ymwrite_lock();
+      return 0;
+    }
+    else{
+      return 1;
+    }
   }
-  if (command == CMD_STOP) return ymwrite_setmethod(lastmethod);
+  if (command == CMD_STOP) {
+    ymwrite_unlock();
+    return ymwrite_set(lastmethod);
+  }
   return ymwrite(0,0);
 }
 

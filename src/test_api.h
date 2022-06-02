@@ -27,7 +27,9 @@ typedef enum test_cmd_e {
 typedef uint16_t(*test_unit)(test_cmd_e);
 
 extern uint16_t test_errors, test_count;
-extern uint8_t test_state;
+extern test_state_e test_state;
+extern test_unit_e current_test;
+
 
 extern void test_select(test_unit_e);
 extern void test_start();

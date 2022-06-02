@@ -19,6 +19,7 @@
   .export _count_fail_nobusy    ; uint16_t
   .export _count_fail_badread ; uint16_t
   .export _count_ok_busy   ; uint16_t
+  .export _count_fail_flap ; uint16_t
 
   .import popa
   .export _ymwrite
@@ -34,6 +35,7 @@
   .export fail_busy
   .export fail_nobusy
   .export fail_dirty
+  .export fail_flap
   .export return_success
 
 .bss
@@ -45,6 +47,7 @@ _count_fail_busy:     .word 0 ; failures: BUSY flag never cleared
 _count_fail_nobusy:   .word 0 ; failures: BUSY flag was never asserted
 _count_fail_badread:  .word 0 ; failures: STATUS byte had 1 in any bits 0-6.
 _count_ok_busy:       .word 0 ; Success count whe BUSY flag was initially set
+_count_fail_flap:     .word 0 ; failures: BUSY flag flapped 0..1...0...1..0..
 _ym_current_method:   .byte 0 ; index of currently-selected write method
 
 ; Note that BUSY means bit7 of YM status byte, or the timeer status bit in
@@ -53,10 +56,16 @@ _ym_current_method:   .byte 0 ; index of currently-selected write method
 ;--------------------------------------------------------------------
 
 .rodata
-WR_METHOD_LO:
-  .byte <ymwrite_nops, <ymwrite_viat1, <ymwrite_busyflag, <ymwrite_forcebusy
-WR_METHOD_HI:
-  .byte >ymwrite_nops, >ymwrite_viat1, >ymwrite_busyflag, >ymwrite_forcebusy
+
+;WR_METHOD_LO:
+;  .byte <ymwrite_nops, <ymwrite_viat1, <ymwrite_busyflag, <ymwrite_forcebusy
+;WR_METHOD_HI:
+;  .byte >ymwrite_nops, >ymwrite_viat1, >ymwrite_busyflag, >ymwrite_forcebusy
+
+
+.define WR_METHODS ymwrite_nops, ymwrite_viat1, ymwrite_busyflag, ymwrite_forcebusy
+WR_METHOD_LO: .lobytes  WR_METHODS
+WR_METHOD_HI: .hibytes  WR_METHODS
 
 NUM_METHODS = (WR_METHOD_HI - WR_METHOD_LO)
 
@@ -195,6 +204,12 @@ fail_nobusy:
   inc _count_fail_nobusy
   bne return_fail
   inc _count_fail_nobusy+1
+  bra return_fail
+
+fail_flap:
+  inc _count_fail_flap
+  bne return_fail
+  inc _count_fail_flap+1
   bra return_fail
 
 return_fail:

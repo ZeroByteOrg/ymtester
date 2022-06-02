@@ -2,7 +2,7 @@
 //#include <stdio.h>
 #include <conio.h>
 #include <cx16.h>
-#include "unit_test.h"
+#include "test_api.h"
 #include "ymwrite.h"
 #include "vsync.h"
 

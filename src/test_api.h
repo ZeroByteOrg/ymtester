@@ -1,5 +1,5 @@
-#ifndef _unit_test_h_
-#define _unit_test_h_
+#ifndef _test_api_h_
+#define _test_api_h_
 
 #include <stdint.h>
 

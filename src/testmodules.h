@@ -1,7 +1,7 @@
 #ifndef _testmodules_h_
 #define _testmodules_h_
 
-#include "unit_test.h"
+#include "test_api.h"
 #include <stdint.h>
 
 extern uint16_t nulltest(test_cmd_e);

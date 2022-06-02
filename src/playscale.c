@@ -1,6 +1,6 @@
 
 #include "ymwrite.h"
-#include "unit_test.h"
+#include "test_api.h"
 #include <stdint.h>
 
 static const unsigned char tone[] = {

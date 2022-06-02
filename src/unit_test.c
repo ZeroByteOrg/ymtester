@@ -1,7 +1,6 @@
-#include "unit_test.h"
+#include "test_api.h"
 #include "testmodules.h"
 
-uint16_t nulltest(test_cmd_e) { return 0; }
 
 test_unit modules[TEST_count] = {
   &nulltest,

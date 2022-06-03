@@ -8,6 +8,8 @@ typedef enum YM_METHOD {
   YM_WRITE_VIATIMER,
   YM_WRITE_BUSYFLAG,
   YM_WRITE_FORCEBUSY,
+  YM_WRITE_count,
+  YM_WRITE_SPECIAL = YM_WRITE_count
 } YM_METHOD;
 
 extern uint16_t
@@ -22,5 +24,6 @@ extern unsigned char __fastcall__ ymwrite (unsigned char reg, unsigned char val)
 extern void ymwrite_lock();
 extern void ymwrite_unlock();
 extern char ymwrite_set(YM_METHOD);
+extern char ymwrite_islocked();
 
 #endif

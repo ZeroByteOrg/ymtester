@@ -6,16 +6,22 @@
 typedef enum test_unit_e {
   TEST_NULL,
   TEST_AUDIBLE,
-  TEST_BUSY_FLAG,
   TEST_READ_STATUS,
+  TEST_BUSY_FLAG,
+  TEST_BUSY_PROBE,
   TEST_IRQ,
+  TEST_TIMERS,
   TEST_WRITE_HARNESS,
   TEST_count
 } test_unit_e;
 
 typedef enum test_state_e {
   STATE_IDLE,
-  STATE_RUNNING
+  STATE_STOPPING,
+  STATE_STARTING,
+  STATE_RUNNING,
+  STATE_PAUSED,
+  STATE_count
 } test_state_e;
 
 typedef enum test_cmd_e {

@@ -4,11 +4,11 @@
 .define DATA $A000 ; use HiRam
 
 ; these will be replaced with the right char codes later.
-BYTE_GARBAGE = 'V' ;$D6
-BYTE_HI = 'E'
+BYTE_GARBAGE = 'x' ;$D6
+BYTE_HI = '^'
 BYTE_LO = '.'
-BYTE_RI = 'N'
-BYTE_FA = 'M'
+BYTE_RI = '^'
+BYTE_FA = '.'
 
 .import fail_busy
 .import fail_nobusy
@@ -19,6 +19,8 @@ BYTE_FA = 'M'
 
 .import _count_fail_badread
 
+.export _ym_probe_busy
+
 .code
 
 lastbyte: .byte 0
@@ -28,6 +30,8 @@ n_fall:   .byte 0
 lastedge: .byte 0
 
 .proc _ym_probe_busy: near
+  stz RAM_BANK
+  inc RAM_BANK
   ; make sure the YM is ready for writing.
   ldx #0
 long_busy_wait:
@@ -78,7 +82,7 @@ check_rising:
   ora lastbyte
   eor lastbyte
   beq check_falling
-  sta lastbyte
+  sta lastbyte  ; $80 is the result of a rising edge detect, which is OK to save
   lda #1
   sta lastedge
   inc n_rise
@@ -90,7 +94,7 @@ check_falling:
   eor lastbyte
   and lastbyte
   beq check_low
-  sta lastbyte
+  stz lastbyte
   stz lastedge
   inc n_fall
   lda #BYTE_FA

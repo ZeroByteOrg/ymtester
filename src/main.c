@@ -14,7 +14,6 @@ void init() {
   test_select(TEST_NULL);
 }
 
-
 int main() {
 //  unsigned char key;
   init();
@@ -23,7 +22,7 @@ int main() {
     vsync();
     if(kbhit()) handle_input(cgetc());
     test_check();
-    update_counters();
+    update_screen();
   }
   return 0;
 }

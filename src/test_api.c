@@ -6,8 +6,10 @@ char test_number;
 test_unit modules[TEST_count] = {
   &nulltest,
   &playscale,
-  &busyflag,
   &readzero,
+  &busyflag,
+  &probebusy,
+  &playscale,
   &playscale,
   &playscale
 };
@@ -21,22 +23,19 @@ uint16_t test_errors = 0;
 uint16_t test_count  = 0;
 
 void test_select(test_unit_e t) {
-  if (test_state == STATE_RUNNING)
-    test_errors += test_module(CMD_STOP);
+  test_state_e state = test_state;
+  if (state == STATE_RUNNING) test_stop();
   asm("sei");
   test_module = modules[t];
   asm("cli");
-  if (test_state == STATE_RUNNING) {
-    test_errors += test_module(CMD_START);
-    test_count = 1;
-  }
+  if (state == STATE_RUNNING) test_start();
   current_test = t;
 }
 
 void test_start() {
   test_count = 1;
   test_state = STATE_RUNNING;
-  test_errors = test_module(CMD_START);
+  test_errors += test_module(CMD_START);
 }
 
 void test_stop() {

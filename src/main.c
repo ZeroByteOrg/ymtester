@@ -4,7 +4,7 @@
 #include <cx16.h>
 #include "ui.h"
 #include "test_api.h"
-#include "ymwrite.h"
+#include "ym_api.h"
 #include "vsync.h"
 
 
@@ -12,12 +12,12 @@ void init() {
   ymwrite_unlock();
   ymwrite_set(YM_WRITE_BUSYFLAG);
   test_select(TEST_NULL);
+  draw_screen();
 }
 
 int main() {
 //  unsigned char key;
   init();
-  draw_screen();
   while (1) {
     vsync();
     if(kbhit()) handle_input(cgetc());

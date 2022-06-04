@@ -1,6 +1,6 @@
 #include "ui.h"
 #include "test_api.h"
-#include "ymwrite.h"
+#include "ym_api.h"
 #include <conio.h>
 
 #define printval(x) cprintf("%05u\n\r",(x))
@@ -90,7 +90,8 @@ void draw_screen() {
   printcounter(0,"Busy Timeout\n\r");
   printcounter(0,"Never Busy\n\r");
   printcounter(0,"Dirty Reads\n\r");
-  printcounter(0,"Success Busy Wait\n\n\r");
+  printcounter(0,"Busy Flaps\n\r");
+  printcounter(0,"OK Busy\n\n\r");
   cprintf("TEST MODULE ERRORS:\n\r");
   printcounter(0, "Errors\n\r");
   printcounter(0, "Iterations\n\n\r");
@@ -140,6 +141,7 @@ void update_counters() {
   printval(count_fail_busy);
   printval(count_fail_nobusy);
   printval(count_fail_badread);
+  printval(count_fail_flap);
   printval(count_ok_busy);
   cprintf("\n\n");
   printval(test_errors);
@@ -151,9 +153,9 @@ void update_test_indicator() {
   static test_state_e prev_state = STATE_count;
 
   if (current_test == prev_test && test_state == prev_state) return;
-  gotoxy(1,16+prev_test);
+  gotoxy(1,17+prev_test);
   cputc(' ');
-  gotoxy(1,16+current_test);
+  gotoxy(1,17+current_test);
   prev_test = current_test;
   prev_state = test_state;
   if (test_state == STATE_RUNNING)
@@ -168,9 +170,9 @@ void update_write_indicator() {
 
   if (ymwrite_islocked() == prev_lock && ym_current_method == prev_method) return;
 
-  gotoxy (1,28+prev_method);
+  gotoxy (1,29+prev_method);
   cputc(' ');
-  gotoxy (1,28+ym_current_method);
+  gotoxy (1,29+ym_current_method);
   prev_method = ym_current_method;
   prev_lock = ymwrite_islocked();
   if (prev_lock)

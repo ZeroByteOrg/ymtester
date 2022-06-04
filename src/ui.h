@@ -2,7 +2,7 @@
 #define _ui_c_
 
 #include "test_api.h"
-#include "ymwrite.h"
+#include "ym_api.h"
 
 extern void clear_counters();
 extern void handle_input(unsigned char);

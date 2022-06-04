@@ -1,4 +1,4 @@
-#include "ymwrite.h"
+#include "ym_api.h"
 
 char ym_locked = 0;
 

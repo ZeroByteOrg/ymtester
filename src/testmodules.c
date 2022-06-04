@@ -1,4 +1,4 @@
-#include "ymwrite.h"
+#include "ym_api.h"
 #include "test_api.h"
 
 #define YM_DATA (*(unsigned char*)(0x9f41))

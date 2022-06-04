@@ -1,5 +1,5 @@
-#ifndef _ymwrite_h_
-#define _ymwrite_h_
+#ifndef _ym_api_h_
+#define _ym_api_h_
 
 #include <stdint.h>
 
@@ -16,6 +16,7 @@ extern uint16_t
   count_fail_busy,    // n times YM was busy and never cleared
   count_fail_nobusy,  // n times YM was never busy
   count_fail_badread, // n times YM_STATUS byte contained 1 in any bit 0-6
+  count_fail_flap,    // n times Busy made multiple 0->1 transitions.
   count_ok_busy;      // n successful writes where YM was initially "busy"
 
 extern YM_METHOD ym_current_method;

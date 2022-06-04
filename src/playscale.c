@@ -1,5 +1,5 @@
 
-#include "ymwrite.h"
+#include "ym_api.h"
 #include "test_api.h"
 #include <stdint.h>
 

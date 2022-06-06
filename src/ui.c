@@ -10,17 +10,21 @@
 #define VIEW_LEN 32
 #define ram_bank (*(unsigned char*) 0x0000)
 
-extern void draw_busyview();
-extern void update_counters();
-extern void update_busyview();
-extern void update_test_indicator();
-extern void update_write_indicator();
+void draw_busyview();
+void update_counters();
+void update_busyview();
+void update_test_indicator();
+void update_write_indicator();
+
+static const char ruler[] = "]-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+[";
+
 
 void clear_ym_counters() {
   count_fail_busy = 0;
   count_fail_nobusy = 0;
   count_fail_badread = 0;
   count_ok_busy = 0;
+  count_fail_flap = 0;
 }
 
 void clear_test_counters() {
@@ -42,18 +46,23 @@ void handle_input(unsigned char c) {
   cprintf(" %u",c);
 #endif
   if (c>='0' && c<TEST_count+48) {
-    c -= 48;
-    if (c != current_test) {
+//    c -= 48;
+//    if (c != current_test) {
 //      update_test_indicator(current_test, c);
-      test_select(c);
-    }
-    c += 48;
+      test_select(c-48);
+//    }
+//    c += 48;
   }
   switch (c) {
   case 13: // enter
-    if (test_state == STATE_RUNNING) test_stop();
-    else test_start();
-//    update_test_indicator(current_test, current_test);
+    switch (test_state) {
+      case STATE_PAUSED:
+      case STATE_IDLE:
+        test_start();
+        break;
+      default:
+        test_stop();
+    }
     break;
   case 'a':
   case 'A':
@@ -102,8 +111,8 @@ void draw_screen() {
   cprintf("   2: Clean Status Read Test\n\r");
   cprintf("   3: Busy Flag Read Test\n\r");
   cprintf("   4: Busy Flag Probe\n\r");
-  cprintf("   5: IRQ test (not implemented)\n\r");
-  cprintf("   6: Timer Status Flags Test (not iplemented)\n\r");
+  cprintf("   5:  X \n\r");
+  cprintf("   6: Timer Status Flags Test\n\r");
   cprintf("   7: CT output pin test (not implemented)\n\n\n\r");
   cprintf("Select YM Write Method:\n\n\r");
   cprintf("   A: Safe\n\r");
@@ -118,7 +127,7 @@ void draw_screen() {
 void draw_busyview() {
   unsigned char i;
   ram_bank = 1;
-  for(i=0;i<VIEW_LEN;i++) busyview[i]='X';
+  for(i=0;i<VIEW_LEN;i++) busyview[i]='-';
   update_busyview();
 }
 
@@ -149,7 +158,7 @@ void update_counters() {
 }
 
 void update_test_indicator() {
-  static test_unit_e  prev_test = TEST_count;
+  static test_module_e  prev_test = TEST_count;
   static test_state_e prev_state = STATE_count;
 
   if (current_test == prev_test && test_state == prev_state) return;

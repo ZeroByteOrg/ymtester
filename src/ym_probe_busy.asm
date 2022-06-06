@@ -4,11 +4,11 @@
 .define DATA $A000 ; use HiRam
 
 ; these will be replaced with the right char codes later.
-BYTE_GARBAGE = 'x' ;$D6
-BYTE_HI = '^'
-BYTE_LO = '.'
-BYTE_RI = '^'
-BYTE_FA = '.'
+BYTE_GARBAGE = $A6 ; checkered square
+BYTE_HI = $A3 ;
+BYTE_LO = $A4 ; '.'
+BYTE_RI = $A5 ; '^'
+BYTE_FA = $A5 ; '.'
 
 .import fail_busy
 .import fail_nobusy
@@ -30,19 +30,23 @@ n_fall:   .byte 0
 lastedge: .byte 0
 
 .proc _ym_probe_busy: near
+  ; guarantee that RAM bank 1 is active
   stz RAM_BANK
   inc RAM_BANK
+
   ; make sure the YM is ready for writing.
   ldx #0
 long_busy_wait:
   dex
   bne long_busy_wait
+
   ; force a busy condition by writing 0 into unused reg 0.
   stz YM_reg
   nop
   nop
   nop
   stz YM_data
+
   ; poll the busy flag NUM_CHECKS times as rapidly as possible
 .repeat NUM_CHECKS , I
   lda YM_data

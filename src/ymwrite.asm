@@ -27,6 +27,7 @@
   .export _ym_current_method
   .export ymwrite
   .export ymwrite_setmethod
+  .export ymwrite_nops
 
   ; allow other assembly routines to use these tmp locations and routines
   .export nobusy

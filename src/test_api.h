@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef enum test_unit_e {
+typedef enum test_module_e {
   TEST_NULL,
   TEST_AUDIBLE,
   TEST_READ_STATUS,
@@ -13,10 +13,13 @@ typedef enum test_unit_e {
   TEST_TIMERS,
   TEST_WRITE_HARNESS,
   TEST_count
-} test_unit_e;
+} test_module_e;
+
 
 typedef enum test_state_e {
   STATE_IDLE,
+  STATE_FORCING_STOP,
+  STATE_STOPPING2,
   STATE_STOPPING,
   STATE_STARTING,
   STATE_RUNNING,
@@ -34,12 +37,12 @@ typedef uint16_t(*test_unit)(test_cmd_e);
 
 extern uint16_t test_errors, test_count;
 extern test_state_e test_state;
-extern test_unit_e current_test;
+extern test_module_e current_test;
 
 
-extern void test_select(test_unit_e);
+extern void test_select(test_module_e);
 extern void test_start();
 extern void test_stop();
-extern void test_check();
+extern void test_run();
 
 #endif

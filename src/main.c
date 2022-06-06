@@ -5,13 +5,15 @@
 #include "ui.h"
 #include "test_api.h"
 #include "ym_api.h"
-#include "vsync.h"
+#include "util.h"
+#include "irq.h"
 
 
 void init() {
+  irq_install();
   ymwrite_unlock();
-  ymwrite_set(YM_WRITE_BUSYFLAG);
-  test_select(TEST_NULL);
+  ymwrite_set(YM_WRITE_SAFE);
+  test_select(TEST_AUDIBLE);
   draw_screen();
 }
 
@@ -21,7 +23,7 @@ int main() {
   while (1) {
     vsync();
     if(kbhit()) handle_input(cgetc());
-    test_check();
+    test_run();
     update_screen();
   }
   return 0;

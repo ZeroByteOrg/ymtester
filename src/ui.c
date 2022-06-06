@@ -16,7 +16,7 @@ void update_busyview();
 void update_test_indicator();
 void update_write_indicator();
 
-static const char ruler[] = "]-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+[";
+static const char ruler[] = "]+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-[";
 
 
 void clear_ym_counters() {
@@ -132,7 +132,7 @@ void draw_busyview() {
   unsigned char i;
   ram_bank = 1;
   for(i=0;i<VIEW_LEN;i++) busyview[i]='-';
-  gotoxy(30,5);
+  gotoxy(29,5);
   cprintf(ruler);
   update_busyview();
 }

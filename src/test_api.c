@@ -14,6 +14,14 @@ test_module_e current_test = TEST_NULL;
 uint16_t test_errors = 0;
 uint16_t test_count  = 0;
 char     autostart   = 0;
+char     error_pause = 0;
+
+void test_init() {
+  asm("sei");
+  test_module = modules[next_test];
+  asm("cli");
+  current_test = next_test;
+}
 
 void test_select(test_module_e t) {
   next_test = t;
@@ -21,6 +29,10 @@ void test_select(test_module_e t) {
     autostart = 1;
   else
     autostart = 0;
+}
+
+void test_toggle_autopause() {
+  error_pause ^= 1;
 }
 
 void test_start() {
@@ -70,7 +82,9 @@ void test_run() {
       break;
     case STATE_RUNNING:
       ++test_count;
-      test_errors += test_module(CMD_RUN);
+      e = test_module(CMD_RUN);
+      test_errors += e;
+      if(e && error_pause) test_state = STATE_PAUSED;
       break;
     case STATE_STARTING:
       ++test_count;

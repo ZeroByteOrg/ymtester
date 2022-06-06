@@ -80,6 +80,10 @@ void handle_input(unsigned char c) {
   case 'D':
     ymwrite_set(YM_WRITE_FORCEBUSY);
     break;
+  case 'p':
+  case 'P':
+    test_toggle_autopause();
+    break;
   case 'w':
   case 'W':
     clear_ym_counters();
@@ -169,6 +173,8 @@ void update_test_indicator() {
   prev_state = test_state;
   if (test_state == STATE_RUNNING)
     cputc('>');
+  else if (test_state == STATE_PAUSED)
+    cputc('+');
   else
     cputc('-');
 }

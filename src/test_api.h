@@ -39,10 +39,11 @@ extern uint16_t test_errors, test_count;
 extern test_state_e test_state;
 extern test_module_e current_test;
 
-
+extern void test_init();
 extern void test_select(test_module_e);
 extern void test_start();
 extern void test_stop();
 extern void test_run();
+extern void test_toggle_autopause();
 
 #endif

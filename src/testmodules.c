@@ -101,9 +101,9 @@ uint16_t ymtimer(test_cmd_e command) {
   static char last = 0;
   if (command == CMD_START) {
     // set both timers to the same interval - the fastest possible for CLKB
-    errors += ymwrite(0x10, 0xfc); // clkA bits 2-9
+    errors += ymwrite(0x10, 0xfb); // clkA bits 2-9
     errors += ymwrite(0x11, 0x00); // clkA bits 0-1
-    errors += ymwrite(0x12, 0xff); // clkB
+    errors += ymwrite(0x12, 0xfe); // clkB
     return errors;
   }
   if (command == CMD_STOP) {
@@ -113,7 +113,7 @@ uint16_t ymtimer(test_cmd_e command) {
   errors += ymwrite(0x14, 0x3c+last); // clear and sart the timers
   if(errors) return errors;
   ++irq_waiting;
-  for (j=0 ; j<8 ; j++) {
+  for (j=0 ; j<16 ; j++) {
     snooze();
     if(irq_waiting==0) break;
   }

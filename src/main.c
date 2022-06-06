@@ -12,6 +12,7 @@
 void init() {
   irq_install();
   ymwrite_unlock();
+  test_init();
   ymwrite_set(YM_WRITE_SAFE);
   test_select(TEST_AUDIBLE);
   draw_screen();

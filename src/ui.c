@@ -117,7 +117,7 @@ void draw_screen() {
   cprintf("   4: Busy Flag Probe\n\r");
   cprintf("   5:  X \n\r");
   cprintf("   6: Timer Status Flags Test\n\r");
-  cprintf("   7: CT output pin test (not implemented)\n\n\n\r");
+  cprintf("   7: CT output pin test\n\n\n\r");
   cprintf("Select YM Write Method:\n\n\r");
   cprintf("   A: Safe\n\r");
   cprintf("   B: VIA Timer (will fail)\n\r");
@@ -132,6 +132,8 @@ void draw_busyview() {
   unsigned char i;
   ram_bank = 1;
   for(i=0;i<VIEW_LEN;i++) busyview[i]='-';
+  gotoxy(30,5);
+  cprintf(ruler);
   update_busyview();
 }
 

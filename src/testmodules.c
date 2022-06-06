@@ -3,6 +3,7 @@
 #include "irq.h"
 #include "util.h"
 #include <conio.h>
+#include <cx16.h>
 
 #define YM_DATA (*(unsigned char*)(0x9f41))
 
@@ -12,6 +13,7 @@ uint16_t readzero(test_cmd_e);
 uint16_t busyflag(test_cmd_e);
 uint16_t probebusy(test_cmd_e);
 uint16_t ymtimer(test_cmd_e);
+uint16_t ctpinread(test_cmd_e);
 
 test_unit modules[TEST_count] = {
   &nulltest,
@@ -20,8 +22,8 @@ test_unit modules[TEST_count] = {
   &busyflag,
   &probebusy,
   &playscale,
-  &ymtimer,
-  &playscale
+  &nulltest,
+  &ctpinread
 };
 
 // ym_probe_busy.asm
@@ -132,4 +134,44 @@ uint16_t ymtimer(test_cmd_e command) {
     if (irq_ym_status & 0xfc) ++count_fail_badread;
   }
   return errors;
+}
+
+uint16_t ctpinread (test_cmd_e command) {
+  // this module expects physical connections between YM2151 to VIA2:
+  //
+  //  ____      1k pullup   ______
+  // | YM |         |      | VIA2 |
+  // |    |8 ---|<--+--- 8 |      |
+  // |    |                |      |
+  // |    |9 ---|<--+--- 9 |      |
+  // |____|         |      |______|
+  //            1k pullup
+  //
+  // The test writes a value 0..4 as a 2bit value on
+  // CT1 and CT2 (pins 8 and 9, CT1=lsb). With the above
+  // connectivity, the same value should be readable on VIA2
+  // data port A bits 6 and 7.
+
+  unsigned char i, val;
+  if (command == CMD_START) {
+    // set VIA2 DDRA to be inputs on PA6 and PA7
+    VIA2.ddra &= 0x3F; // (leave config of pins PA0-5 as they were)
+    VIA2.acr &= 0xFE;  // clear bit 0 (set portA latching = disabled)
+    return 0;
+                  // bits 6-7: T1: one-shot mode/PB7 disabled
+                  // bit    5: T2: PB6 disabled (T2 is always a one-shot timer)
+                  // bits 2-4: Shift Reg disabled
+                  // bit    1: Port B latching disabled
+                  // bit    0: Port A latching disabled
+
+  }
+  if (command == CMD_STOP) {
+    return 0;
+  }
+  val = VIA2.pra2 & 0xc0; // get current value being output by YM CT pins.
+  val = (val + 0x40) & 0xc0; // next desired value to write...
+  ymwrite(0x1B, val); // ignore any errors returned by ymwrite()
+  for (i=0 ; i<100 ; i++) snooze(); // wait long enough to guarantee pins updated.
+  if ((VIA2.pra2 & 0xc0)==val) return 0;
+  else return 1;
 }

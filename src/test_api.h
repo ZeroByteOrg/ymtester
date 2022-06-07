@@ -9,8 +9,7 @@ typedef enum test_module_e {
   TEST_READ_STATUS,
   TEST_BUSY_FLAG,
   TEST_BUSY_PROBE,
-  TEST_IRQ,
-  TEST_TIMERS,
+  TEST_YM_TIMERS,
   TEST_WRITE_HARNESS,
   TEST_count
 } test_module_e;

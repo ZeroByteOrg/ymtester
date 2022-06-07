@@ -22,9 +22,13 @@ extern uint16_t
 extern YM_METHOD ym_current_method;
 
 extern unsigned char __fastcall__ ymwrite (unsigned char reg, unsigned char val);
-extern void ymwrite_lock();
-extern void ymwrite_unlock();
+
+// all of these return 1=fail, 0=success
+extern char ymwrite_lock(YM_METHOD);
+extern char ymwrite_unlock();
 extern char ymwrite_set(YM_METHOD);
+
+// returns 0=false, nonzero=true
 extern char ymwrite_islocked();
 
 #endif

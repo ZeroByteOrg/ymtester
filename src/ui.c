@@ -115,14 +115,13 @@ void draw_screen() {
   cprintf("   2: Clean Status Read Test\n\r");
   cprintf("   3: Busy Flag Read Test\n\r");
   cprintf("   4: Busy Flag Probe\n\r");
-  cprintf("   5:  X \n\r");
-  cprintf("   6: Timer Status Flags Test\n\r");
-  cprintf("   7: CT output pin test\n\n\n\r");
+  cprintf("   5: Timer Status Flags Test\n\r");
+  cprintf("   6: CT output pin test\n\n\n\r");
   cprintf("Select YM Write Method:\n\n\r");
-  cprintf("   A: Safe\n\r");
-  cprintf("   B: VIA Timer (will fail)\n\r");
-  cprintf("   C: Check Busy Flag\n\r");
-  cprintf("   D: Require Busy Flag\n\r");
+  cprintf("   A: Safe Delay\n\r");
+  cprintf("   B: VIA Timer Delay\n\r");
+  cprintf("   C: Check YM2151 Busy Flag\n\r");
+  cprintf("   D: Require YM2151 Busy Flag\n\r");
   cprintf("    : Special (automatic)");
   draw_busyview();
   update_screen();
@@ -187,9 +186,9 @@ void update_write_indicator() {
 
   if (ymwrite_islocked() == prev_lock && ym_current_method == prev_method) return;
 
-  gotoxy (1,29+prev_method);
+  gotoxy (1,28+prev_method);
   cputc(' ');
-  gotoxy (1,29+ym_current_method);
+  gotoxy (1,28+ym_current_method);
   prev_method = ym_current_method;
   prev_lock = ymwrite_islocked();
   if (prev_lock)

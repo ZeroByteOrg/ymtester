@@ -87,7 +87,8 @@ _ymwrite_setmethod:
   lda WR_METHOD_HI,x
   sta ymwrite_vector+1
   cli
-exit:
+  stz VIA2_t1ch ; start the VIA2 T1 timer so the overflow flag will be set...
+exit:           ; ...in case VIA write method was selected.
   lda #0
   rol ; .A = carry flag for return value to C program
   ldx #0
@@ -144,7 +145,7 @@ go:
 	nop
 	nop
 	sty	YM_data
-	stz VIA2_t1ch
+  stz VIA2_t1ch ; start the VIA busy timer
   jmp return_success
 .endproc
 

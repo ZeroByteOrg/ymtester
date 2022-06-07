@@ -4,6 +4,7 @@
 #include "util.h"
 #include <conio.h>
 #include <cx16.h>
+#include <stdlib.h> // rand()
 
 #define YM_DATA (*(unsigned char*)(0x9f41))
 
@@ -21,8 +22,7 @@ test_unit modules[TEST_count] = {
   &readzero,
   &busyflag,
   &probebusy,
-  &playscale,
-  &nulltest,
+  &ymtimer,
   &ctpinread
 };
 
@@ -35,35 +35,21 @@ uint16_t nulltest(test_cmd_e) { return 0; }
 // playscale is supplied by playscale.c
 
 uint16_t busyflag(test_cmd_e command) {
-  static YM_METHOD lastmethod ;
   if (command == CMD_START) {
-    lastmethod = ym_current_method;
-    if (ymwrite_set(YM_WRITE_FORCEBUSY) == 0) {
-      ymwrite_lock();
-      return 0;
-    }
-    else{
-      return 1;
-    }
+    return ymwrite_lock(YM_WRITE_FORCEBUSY);
   }
   if (command == CMD_STOP) {
-    ymwrite_unlock();
-    return ymwrite_set(lastmethod);
+    return ymwrite_unlock();
   }
-  return ymwrite(0,0);
+  return ymwrite(0x20 + (unsigned char)rand()%0xe0,0);
 }
 
 uint16_t readzero(test_cmd_e command) {
-  static YM_METHOD lastmethod;
   if (command == CMD_START) {
-    lastmethod = ym_current_method;
-    ymwrite_lock();
-    ymwrite_set(YM_WRITE_SPECIAL);
-    return 0;
+    return ymwrite_lock(YM_WRITE_SPECIAL);
   }
   if (command == CMD_STOP) {
-    ymwrite_unlock();
-    return ymwrite_set(lastmethod);
+    return ymwrite_unlock();
   }
   if (YM_DATA == 0) return 0;
   ++count_fail_badread;
@@ -71,25 +57,13 @@ uint16_t readzero(test_cmd_e command) {
 }
 
 uint16_t probebusy(test_cmd_e command) {
-  static YM_METHOD lastmethod ;
-  uint16_t errors;
   if (command == CMD_START) {
-    lastmethod = ym_current_method;
-    ymwrite_lock();
-    ymwrite_set(YM_WRITE_SPECIAL);
-    return 0;
+    return ymwrite_lock(YM_WRITE_SPECIAL);
   }
   if (command == CMD_STOP) {
-    ymwrite_unlock();
-    return ymwrite_set(lastmethod);
+    return ymwrite_unlock();
   }
-  errors = ym_probe_busy();
-  // TODO: make tests pausable
-  // if (errors) test_state = STATE_PAUSE;
-  // note - the UI should accomplish this functionality, provided
-  // the test API supports pause/resume. UI should call those
-  // when it sees the counters change.
-  return errors;
+  return ym_probe_busy();
 }
 
 uint16_t ymtimer(test_cmd_e command) {

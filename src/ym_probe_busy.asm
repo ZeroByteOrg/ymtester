@@ -48,10 +48,12 @@ long_busy_wait:
   stz YM_data
 
   ; poll the busy flag NUM_CHECKS times as rapidly as possible
+  sei
 .repeat NUM_CHECKS , I
   lda YM_data
   sta DATA+I
 .endrep
+  cli
 
 evaluate_data:
   lda #1

@@ -238,6 +238,7 @@ return_success:
   ldy #128 ; busy timeout
 
 ; do an initial safe wait of 256 busy loops in order to ensure YM is not busy
+  sei
 safe_delay:
   dex
   bne safe_delay
@@ -256,11 +257,13 @@ require_busy:
   stz nobusy
   dey
   bne require_busy
+  cli
   pla
   pla
   jmp fail_nobusy
 
 busy_detected:
+  cli
   ldy #128 ; busy timeout
 still_busy:
   bit YM_data
@@ -290,6 +293,7 @@ done:
 
 
 dirty:
+  cli
   pla
   pla
   jmp fail_dirty

@@ -2,6 +2,7 @@
 #include "ym_api.h"
 #include "test_api.h"
 #include <stdint.h>
+#include <conio.h>
 
 static const unsigned char tone[] = {
         0xc4,0x00,0x02,0x62,0x32,0x62,0x23,0x23,0x0a,0x0a,0x12,0x12,0x12,0x12,0x00,0x00,
@@ -69,9 +70,21 @@ uint16_t ympatch(unsigned char v, const unsigned char* patch) {
   return errors;
 }
 
+void setpanning(unsigned char pan) {
+  unsigned char i;
+  static const char* const labels[4] = { "mute", "left", "rght", "both" };
+
+  for (i=0;i<8;i++)
+    ymwrite(0x20+i,(pan<<6) + (tone[0] & 0x3F));
+  //gotoxy(25,18);
+  gotoxy(39,1);
+  cprintf(" [%4s]",labels[pan]);
+}
+
 uint16_t playscale(test_cmd_e command) {
   static unsigned char delay = 0;
   static const unsigned char* data = CMAJOR_SCALE;
+  static unsigned char pan = 3; // default pan = both
   uint16_t errors = 0;
 
   if (command == CMD_STOP) { // stop
@@ -82,6 +95,8 @@ uint16_t playscale(test_cmd_e command) {
     delay = 1;
     data = CMAJOR_SCALE;
     errors = yminit();
+    setpanning(pan);
+    return errors;
   }
   // continue
   if (delay == 0) return 0;
@@ -91,6 +106,8 @@ uint16_t playscale(test_cmd_e command) {
     data = data+3;
     delay = data[0];
     if (delay==0xff) {
+      if (++pan % 4 == 0) pan = 1; // rotate panning L, R, Both, ...
+      setpanning(pan);
       data = CMAJOR_SCALE;
       delay = 60 + data[0];
     }

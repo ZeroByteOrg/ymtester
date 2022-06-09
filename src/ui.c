@@ -123,6 +123,8 @@ void draw_screen() {
   cprintf("   C: Check YM2151 Busy Flag\n\r");
   cprintf("   D: Require YM2151 Busy Flag\n\r");
   cprintf("    : Special (automatic)");
+  gotoxy(32,1);
+  cprintf("STEREO: [both]");
   draw_busyview();
   update_screen();
 }

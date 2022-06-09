@@ -146,6 +146,10 @@ uint16_t ctpinread (test_cmd_e command) {
   val = (val + 0x40) & 0xc0; // next desired value to write...
   ymwrite(0x1B, val); // ignore any errors returned by ymwrite()
   for (i=0 ; i<100 ; i++) snooze(); // wait long enough to guarantee pins updated.
+
+  gotoxy(50,50);
+  cprintf ("expect:%02x  got:%02x",val,VIA2.pra2 & 0xc0);
+
   if ((VIA2.pra2 & 0xc0)==val) return 0;
   else return 1;
 }

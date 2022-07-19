@@ -6,6 +6,27 @@ int psgfreq[16] = {
   1186, 1188, 1190, 1192, 1194, 1196, 1198, 1200
 };
 
+char psgwave[4] = {
+  0x3F,  // pulse
+  0x40,  // sawtooth
+  0x80,  // triangle
+  0xC0   // noise
+};
+
+char* wavename[4] = {
+  "square",
+  "sawtooth",
+  "triangle",
+  "noise"
+};
+
+int i;
+char psg = 0;
+char pcm = 0;
+char fm = 1;
+char wave = 0;
+char fmreset = 0;
+
 void ymwrite(char r, char v) {
   while (YM2151.data & 0x80) {}
   YM2151.reg = r;
@@ -37,6 +58,7 @@ void ymplay() {
 void psgplay() {
   char i;
   for (i=0 ; i<16 ; i++) psgwrite(4*i+2,0xff);
+  for (i=0 ; i<16 ; i++) psgwrite(4*i+3,psgwave[wave]);
 }
 
 void pcmplay() {
@@ -60,10 +82,27 @@ void pcmsilence() {
   VERA.audio.control = 0x80;
 }
 
-int i;
-char psg = 1;
-char pcm = 1;
-char fm = 1;
+void drawscreen() {
+  clrscr();
+  cprintf("f1: ");
+  if(fm) revers(1);
+  cprintf("fm ");
+  revers(0);
+  cprintf("  [space]: ");
+  if(fmreset) revers(1);
+  cprintf("reset");
+  revers(0);
+  cprintf("\n\rf2: ");
+  if(psg) revers(1);
+  cprintf("psg");
+  revers(0);
+  cprintf("        w: %s\n\r",wavename[wave]);
+  cprintf("f3: ");
+  if(pcm) revers(1);
+  cprintf ("pcm");
+  revers(0);
+  cprintf ("\n\r Q to quit\n\r");
+}
 
 void main () {
 //  int f = 300;
@@ -96,7 +135,7 @@ void main () {
   for (i=0; i<16 ; i++) {
     psgwrite(4*i+0,psgfreq[5]&0xff);
     psgwrite(4*i+2,0);
-    psgwrite(4*i+3,0x3f);
+    psgwrite(4*i+3,psgwave[wave]);
   }
   VERA.address = 0xF9C1;
   VERA.address_hi = 1 | VERA_INC_4;
@@ -118,44 +157,61 @@ void main () {
   __asm__ ("STA %w",0x9F23);
   __asm__ ("STA %w",0x9F23);
 
-  ymplay();
-  psgplay();
-  pcmplay();
-
+  if (fm) ymplay();
+  if (psg) psgplay();
+  if (pcm) pcmplay();
+  drawscreen();
   while (run) {
     fill_fifo();
-    if (kbhit())
-    switch (cgetc()) {
-      case CH_F1:
-        if (fm)
-          ymsilence();
-        else
-          ymplay();
-        fm = fm ? 0 : 1;
-        break;
-      case CH_F2:
-        if (psg)
-          psgsilence();
-        else
-          psgplay();
-        psg = psg ? 0 : 1;
-        break;
-      case CH_F3:
-        if (pcm)
-          pcmsilence();
-        else
-          pcmplay();
-        pcm = pcm ? 0 : 1;
-        break;
-      case 'q':
-      case CH_STOP:
-      case 'Q':
-        run = 0;
-        break;
+    if (kbhit()) {
+      switch (cgetc()) {
+        case CH_F1:
+          if (fm)
+            ymsilence();
+          else
+            ymplay();
+          fm = fm ? 0 : 1;
+          break;
+        case CH_F2:
+          if (psg)
+            psgsilence();
+          else
+            psgplay();
+          psg = psg ? 0 : 1;
+          break;
+        case CH_F3:
+          if (pcm)
+            pcmsilence();
+          else
+            pcmplay();
+          pcm = pcm ? 0 : 1;
+          break;
+        case 'w':
+        case 'W':
+          wave = ++wave % 4;
+          if (psg) psgplay();
+          break;
+        case ' ':
+          if (fmreset) {
+            ymwrite(0x01,0);
+            fmreset = 0;
+          }
+          else {
+            ymwrite(0x01,(1<<3));
+            fmreset = 1;
+          }
+          break;
+        case 'q':
+        case CH_STOP:
+        case 'Q':
+          cprintf("byebye\n\r");
+          run = 0;
+          break;
+      }
+      if(run) drawscreen();
     }
-
   }
-  cgetc(); // consume keystroke
+  if (kbhit()) cgetc(); // consume keystroke
   pcmsilence();
   ymsilence();
   psgsilence();

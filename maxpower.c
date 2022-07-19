@@ -204,7 +204,6 @@ void main () {
         case 'q':
         case CH_STOP:
         case 'Q':
-          cprintf("byebye\n\r");
           run = 0;
           break;
       }
